@@ -1,3 +1,4 @@
+-- Active: 1772185858597@@127.0.0.1@5437
 -- Run this file once, as a PostgreSQL superuser, to create the user, the
 -- database and the table that the application needs. Give it to psql with <,
 -- for example:
@@ -16,7 +17,7 @@
 --
 --   postgresql://guessit:pass%20word@localhost:5432/guessit
 
-CREATE USER guessit WITH PASSWORD 'change-me-now';
+CREATE USER guessit WITH PASSWORD '123';
 
 CREATE DATABASE guessit OWNER guessit;
 
