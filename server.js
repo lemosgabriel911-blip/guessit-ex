@@ -34,6 +34,8 @@ const MAX_GAMES = 1000;
 const crypto = require('node:crypto');
 const express = require('express');
 const { Pool } = require('pg');
+const Mustache = require('mustache');
+const esc = (s) => Mustache.render('{{s}}', { s });
 
 const db = new Pool({ connectionString: DATABASE_URL });
 
@@ -119,7 +121,8 @@ app.post('/games', async (req, res, next) => {
 
     // Insert the new game.
     await db.query(
-      `INSERT INTO game (id, name, secret, attempts, created_at) VALUES ('${id}', '${name}', ${secret}, 0, NOW())`
+      'INSERT INTO game (id, name, secret, attempts, created_at) VALUES ($1, $2, $3, 0, NOW())',
+      [id, name, secret]
     );
 
     // Keep only the MAX_GAMES most recent games, deleting the older ones.
@@ -214,7 +217,7 @@ async function loadGame(id) {
   if (!/^[A-Za-z0-9]+$/.test(id)) {
     return null;
   }
-  const result = await db.query(`SELECT * FROM game WHERE id = '${id}' AND created_at > NOW() - INTERVAL '${GAME_TTL}'`);
+  const result = await db.query(`SELECT * FROM game WHERE id = $1 AND created_at > NOW() - INTERVAL '${GAME_TTL}'`, [id]);
   return result.rows[0] || null;
 }
 
@@ -287,7 +290,7 @@ function renderHome(leaderboard, totalGames, loaded) {
       const medal = rank <= 3 ? `<span class="rank-${rank}">●</span> ` : '';
       return `<li class="list-group-item d-flex justify-content-between align-items-center">
         <span class="rank fw-bold ${rank <= 3 ? 'rank-' + rank : ''}">${rank}</span>
-        <span class="flex-grow-1 ms-2">${medal}${game.name}</span>
+        <span class="flex-grow-1 ms-2">${medal}${esc(game.name)}</span>
         <span class="badge bg-light text-dark rounded-pill">${game.attempts} tries</span>
       </li>`;
     })
@@ -338,7 +341,7 @@ function renderGame(game, hint) {
   let banner = '';
   if (hint === 'won') {
     banner = `<div class="alert alert-success">
-        🎉 <strong>${game.name}</strong>, you found it in ${game.attempts} tries!
+        🎉 <strong>${esc(game.name)}</strong>, you found it in ${game.attempts} tries!
         <a href="/" class="alert-link">Back to the leaderboard</a>
       </div>`;
   } else if (hint === 'higher') {
@@ -372,7 +375,7 @@ function renderGame(game, hint) {
     `${banner}
     <div class="card">
       <div class="card-body">
-        <h1 class="h4 mb-1">Hello, ${game.name}!</h1>
+        <h1 class="h4 mb-1">Hello, ${esc(game.name)}!</h1>
         <p class="text-muted mb-4">I'm thinking of a number between 1 and 100. You've made ${game.attempts} guesses.</p>
         ${controls}
       </div>
