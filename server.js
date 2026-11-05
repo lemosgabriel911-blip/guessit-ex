@@ -5,7 +5,7 @@
 // ===========================================================================
 
 // The port the application listens on.
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // The URL used to connect to the PostgreSQL database. It has the shape
 // postgresql://USER:PASSWORD@HOST:PORT/DATABASE. Change the password to match
